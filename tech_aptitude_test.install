@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function tech_aptitude_test_schema() {
+  $schema = array();
+  $schema['aptitude_test'] = array(
+    'description' => 'Store aptitude test data',
+    'fields' => array(
+      'message_id' => array(
+        'type' => 'serial',
+        'not null' => true,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+    ),
+    'primary key' => array('message_id'), 
+  );
+  return $schema;
+}
+

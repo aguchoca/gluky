@@ -1,0 +1,165 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function tech_aptitude_test_menu() {
+  $menu = array();
+
+  $menu['tech-apt-contact'] = array(
+    'title' => 'Contact Form',
+    'access callback' => true,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tech_aptitude_test_form'),
+  );
+
+  $menu['tech-apt-report'] = array(
+    'title' => 'Contacts',
+    'access callback' => TRUE,
+    'page callback' => 'tech_aptitude_test_report',
+    'page arguments' => array(1),
+  );
+
+  return $menu;
+}
+
+/**
+ * Form build function.
+ */
+function tech_aptitude_test_form($form, &$form_state) {
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+    '#required' => true,
+  );
+
+  $form['email'] = array(
+    '#type' => 'textfield',
+    '#title' => t('E-Mail'),
+    '#required' => true,
+  );
+
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+  );
+
+  return $form;
+}
+
+/**
+ * Form build function.
+ */
+function tech_aptitude_test_form_validate($form, &$form_state) {
+}
+
+/**
+ * Form build function.
+ */
+function tech_aptitude_test_form_submit($form, &$form_state) {
+  db_insert('aptitude_test')
+    ->fields(array(
+      'name' => $form_state['values']['name'],
+      'email' => $form_state['values']['email'],
+    ))
+    ->execute();
+  drupal_set_message(t('Your message has been saved.'));
+}
+
+/**
+ * Report page callback.
+ * @param $message_id ID of message to show, if NULL shows a list of
+ * messages with link to details.
+ */
+function tech_aptitude_test_report($message_id = NULL) {
+  /* If ID is given, show details */
+  if ($message_id)
+    return tech_aptitude_test_report_detail($message_id);
+
+  /* Fetch data from DB table */
+  $records = db_select('aptitude_test', 't')
+    ->fields('t', array('message_id', 'name', 'email'))
+    ->orderBy('t.message_id')
+    ->execute();
+
+  /* Build data table */
+  /* NOTICE: check_plain must be used for security: prevent XSS */
+  $rows = array();
+  foreach ($records as $record) {
+    $rows[] = array(
+      check_plain($record->name),
+      check_plain($record->email),
+      l(t('View'), "tech-apt-report/{$record->message_id}"),
+    );
+  }
+
+  /* Return table to show */
+  return array(
+    '#theme' => 'table',
+    '#header' => array(
+      t('Name'), 
+      t('E-Mail'),
+      t('View'),
+    ),
+    '#rows' => $rows,
+  );
+}
+
+/**
+ * Show message details.
+ * @param $message_id ID of message to show.
+ */
+function tech_aptitude_test_report_detail($message_id) {
+  /* Fetch message from DB */
+  $message = db_select('aptitude_test', 't')
+    ->fields('t')
+    ->condition('t.message_id', $message_id)
+    ->execute()
+    ->fetch();
+
+  /* Build Page */
+  $page = array();
+
+  /* Show name */
+  $page['name'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array('message-field', 'name'),
+      'id' => 'message-field-name',
+    ),
+  );
+  $page['name']['title'] = array(
+    '#markup' => '<h2>' . t('Name') . '</h2>',
+  );
+  /* NOTICE: check_plain must be used for security: prevent XSS */
+  $page['name']['value'] = array(
+    '#prefix' => '<p>',
+    '#suffix' => '</p>',
+    '#markup' => check_plain($message->name),
+  );
+
+  /* Show email */
+  $page['email'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array('message-field', 'email'),
+      'id' => 'message-field-email',
+    ),
+  );
+  $page['email']['title'] = array(
+    '#markup' => '<h2>' . t('E-Mail') . '</h2>',
+  );
+  /* NOTICE: check_plain must be used for security: prevent XSS */
+  $page['email']['value'] = array(
+    '#prefix' => '<p>',
+    '#suffix' => '</p>',
+    '#markup' => check_plain($message->email),
+  );
+
+  return $page;
+}
+
