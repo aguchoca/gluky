@@ -67,9 +67,12 @@ function tech_aptitude_test_form_validate($form, &$form_state) {
   if($form_state['values']['name'] == ''){
     form_set_error('name', t('%name no valido!!', array('%name'=>$form['name']['#title'])));
   }
-   if(!valid_email_address($form_state['values']['email'])){
-      form_set_error('email', t('%email no valido!!', array('%email'=>$form['email']['#title'])));
-  }
+  /* if(!valid_email_address($form_state['values']['email'])){
+      form_set_error('email', t('%email no valido!!', array('%email'=>$form['email']['#title'])));*/
+  if(!validacion_email_rest($form_state['values']['email'])){
+     form_set_error('email', t('%email no valido!!', array('%email'=>$form['email']['#title'])));
+};
+
    if($form_state['values']['message'] == ''){
       form_set_error('message', t('%mensaje no puede estar vacio!', array('%mensaje'=>$form['message']['#title'])));
   }
@@ -102,7 +105,7 @@ function tech_aptitude_test_report($message_id = NULL) {
 
   /* Fetch data from DB table */
   $records = db_select('aptitude_test', 't')
-    ->fields('t', array('message_id', 'name', 'email'))
+    ->fields('t', array('message_id', 'name', 'email','message', 'timestamp'))
     ->orderBy('t.message_id')
     ->execute();
 
@@ -113,6 +116,8 @@ function tech_aptitude_test_report($message_id = NULL) {
     $rows[] = array(
       check_plain($record->name),
       check_plain($record->email),
+      check_plain($record->message),
+      check_plain($record->timestamp),
       l(t('View'), "tech-apt-report/{$record->message_id}"),
     );
   }
@@ -123,6 +128,8 @@ function tech_aptitude_test_report($message_id = NULL) {
     '#header' => array(
       t('Name'),
       t('E-Mail'),
+      t('Mensaje'),
+      t('Fecha'),
       t('View'),
     ),
     '#rows' => $rows,
@@ -181,6 +188,43 @@ function tech_aptitude_test_report_detail($message_id) {
     '#markup' => check_plain($message->email),
   );
 
+   /* Mostrar mensaje */
+  $page['message'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array('message-field', 'message'),
+      'id' => 'message-field-message',
+    ),
+  );
+  $page['message']['title'] = array(
+    '#markup' => '<h2>' . t('Mensaje') . '</h2>',
+  );
+  /* NOTICE: check_plain must be used for security: prevent XSS */
+  $page['message']['value'] = array(
+    '#prefix' => '<p>',
+    '#suffix' => '</p>',
+    '#markup' => check_plain($message->message),
+  );
+
   return $page;
 }
 
+function validacion_email_rest ($mail = '') {
+  $data = array(
+      'key' => 'WawdOdmylf0',
+      'mail' => $mail,
+    );
+  $base_url = url('http://dev.glukynetwork.co/dumb-validator/', array('query'=>$data));
+  $options = array(
+    'method' => 'GET',
+  );
+  $response = drupal_http_request($base_url, $options);
+  $data = json_decode($response->data);
+  //dpm($response->code);
+  // Check if login was successful
+  if ($response->code == 200 && $data->status == 'valid') {
+    $result = TRUE;
+    return TRUE;
+  }
+  return false;
+}
