@@ -40,7 +40,7 @@ function tech_aptitude_test_form($form, &$form_state) {
   );
 
   $form['message'] = array(
-  '#title' => t('message'),
+  '#title' => t('mensaje'),
   '#type' => 'textarea',
   '#description' => t('Escriba su comentario'),
   //'#default_value' => isset( $context['keywords']) ? drupal_implode_tags($context['keywords']) : '',
@@ -53,7 +53,7 @@ function tech_aptitude_test_form($form, &$form_state) {
 
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Send'),
+    '#value' => t('Enviar'),
   );
 
   return $form;
@@ -69,6 +69,9 @@ function tech_aptitude_test_form_validate($form, &$form_state) {
   }
    if(!valid_email_address($form_state['values']['email'])){
       form_set_error('email', t('%email no valido!!', array('%email'=>$form['email']['#title'])));
+  }
+   if($form_state['values']['message'] == ''){
+      form_set_error('message', t('%mensaje no puede estar vacio!', array('%mensaje'=>$form['message']['#title'])));
   }
 }
 
@@ -141,7 +144,7 @@ function tech_aptitude_test_report_detail($message_id) {
   /* Build Page */
   $page = array();
 
-  /* Show name */
+  /* Mostrar name */
   $page['name'] = array(
     '#type' => 'container',
     '#attributes' => array(
@@ -153,13 +156,14 @@ function tech_aptitude_test_report_detail($message_id) {
     '#markup' => '<h2>' . t('Name') . '</h2>',
   );
   /* NOTICE: check_plain must be used for security: prevent XSS */
+
   $page['name']['value'] = array(
     '#prefix' => '<p>',
     '#suffix' => '</p>',
     '#markup' => check_plain($message->name),
   );
 
-  /* Show email */
+  /* Mostrar email */
   $page['email'] = array(
     '#type' => 'container',
     '#attributes' => array(
