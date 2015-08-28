@@ -39,6 +39,14 @@ function tech_aptitude_test_form($form, &$form_state) {
     '#required' => true,
   );
 
+  $form['message'] = array(
+  '#title' => t('message'),
+  '#type' => 'textarea',
+  '#description' => t('Escriba su comentario'),
+  //'#default_value' => isset( $context['keywords']) ? drupal_implode_tags($context['keywords']) : '',
+  );
+
+
   $form['actions'] = array(
     '#type' => 'actions',
   );
@@ -55,6 +63,13 @@ function tech_aptitude_test_form($form, &$form_state) {
  * Form build function.
  */
 function tech_aptitude_test_form_validate($form, &$form_state) {
+
+  if($form_state['values']['name'] == ''){
+    form_set_error('name', t('%name no valido!!', array('%name'=>$form['name']['#title'])));
+  }
+   if(!valid_email_address($form_state['values']['email'])){
+      form_set_error('email', t('%email no valido!!', array('%email'=>$form['email']['#title'])));
+  }
 }
 
 /**
@@ -65,9 +80,11 @@ function tech_aptitude_test_form_submit($form, &$form_state) {
     ->fields(array(
       'name' => $form_state['values']['name'],
       'email' => $form_state['values']['email'],
+      'message' => $form_state['values']['message'],
+      'timestamp' => date("Y-m-d H:i:s", time()),
     ))
     ->execute();
-  drupal_set_message(t('Your message has been saved.'));
+  drupal_set_message(t('Su mensaje ha sido enviado.'));
 }
 
 /**
@@ -101,7 +118,7 @@ function tech_aptitude_test_report($message_id = NULL) {
   return array(
     '#theme' => 'table',
     '#header' => array(
-      t('Name'), 
+      t('Name'),
       t('E-Mail'),
       t('View'),
     ),
